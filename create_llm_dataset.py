@@ -6,11 +6,6 @@ def create_training_dataset(navigator, robots):
     training_data = []
     
     for i, robot in enumerate(robots):
-        # Add a separator comment for each robot
-        training_data.append({
-            "comment": f"### Robot {i+1} - Fitness: {robot.fitness:.4f} ###"
-        })
-        
         rssi_window = deque([-100] * 5, maxlen=5)  # Start with -100 for first 5 steps
         current_pos = navigator.start_position.copy()
         
@@ -24,23 +19,21 @@ def create_training_dataset(navigator, robots):
                 
             current_rssi = navigator.rssi_values[current_pos[0]][current_pos[1]]
             
+            # Convert the RSSI window list to a comma-separated string
+            rssi_string = ", ".join(str(x) for x in rssi_window)
+            
             example = {
                 "messages": [
                     {
-                        "role": "system",
-                        "content": "an action machine based on last 5 rssi values"
-                    },
-                    {
                         "role": "user",
-                        "content": f"{list(rssi_window)}"
+                        "content": [{"type": "text", "text": rssi_string}]
                     },
                     {
                         "role": "assistant",
-                        "content": action
+                        "content": [{"type": "text", "text": action}]
                     }
                 ]
             }
-            # 
             training_data.append(example)
             
             current_pos = navigator.apply_move(current_pos, action)

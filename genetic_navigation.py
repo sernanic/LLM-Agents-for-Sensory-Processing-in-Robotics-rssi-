@@ -12,6 +12,23 @@ class Robot:
     steps_taken: int = 0
     reached_target: bool = False
     current_gene_index: int = 0  # Track current action being executed
+    position_history: List[List[int]] = None  # Track visited positions
+
+    def __post_init__(self):
+        self.position_history = []
+
+    def is_stuck(self) -> bool:
+        """Check if robot is stuck in a loop or not making progress"""
+        if len(self.position_history) < 10:  # Need some history to detect loops
+            return False
+            
+        # Check last 10 positions for repeating patterns
+        last_positions = self.position_history[-10:]
+        position_set = set(tuple(pos) for pos in last_positions)
+        if len(position_set) <= 3:  # Robot is revisiting same 2-3 positions
+            return True
+            
+        return False
 
 class GeneticNavigator:
     def __init__(self, population_size: int = 100, gene_length: int = 50):
@@ -98,6 +115,7 @@ class GeneticNavigator:
             action = robot.genes[robot.current_gene_index]
             if self.is_valid_move(robot.position, action):
                 robot.position = self.apply_move(robot.position, action)
+                robot.position_history.append(robot.position.copy())
                 robot.steps_taken += 1
                 
                 # Check if target reached
@@ -117,14 +135,16 @@ class GeneticNavigator:
             robot.steps_taken = 0
             robot.reached_target = False
             robot.fitness = 0.0
+            robot.position_history = []
 
     def calculate_fitness(self, robot: Robot) -> float:
         """Calculate fitness based on path length and final RSSI value."""
         current_pos = robot.position.copy()
         steps = 0
+        robot.position_history = [current_pos.copy()]  # Reset position history
         
         for action in robot.genes:
-            if steps >= 25:  # Kill robots that take too many steps
+            if steps >= 25 or robot.is_stuck():  # Kill robots that take too many steps or are stuck
                 robot.fitness = 0
                 robot.steps_taken = steps
                 return 0
@@ -133,6 +153,7 @@ class GeneticNavigator:
                 continue
                 
             current_pos = self.apply_move(current_pos, action)
+            robot.position_history.append(current_pos.copy())
             steps += 1
             
             current_rssi = self.rssi_values[current_pos[0]][current_pos[1]]
