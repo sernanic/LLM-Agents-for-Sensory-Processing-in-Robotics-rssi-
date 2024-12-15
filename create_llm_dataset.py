@@ -23,16 +23,9 @@ def create_training_dataset(navigator, robots):
             rssi_string = ", ".join(str(x) for x in rssi_window)
             
             example = {
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": [{"type": "text", "text": rssi_string}]
-                    },
-                    {
-                        "role": "assistant",
-                        "content": [{"type": "text", "text": action}]
-                    }
-                ]
+                "instruction": "Based on the RSSI values, choose the best direction to move (back, straight,left, or right)",
+                "input": rssi_string,
+                "output": action
             }
             training_data.append(example)
             

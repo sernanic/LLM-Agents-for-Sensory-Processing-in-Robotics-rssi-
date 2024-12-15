@@ -114,7 +114,14 @@ class GeneticNavigator:
 
             action = robot.genes[robot.current_gene_index]
             if self.is_valid_move(robot.position, action):
-                robot.position = self.apply_move(robot.position, action)
+                new_position = self.apply_move(robot.position, action)
+                
+                # Check if position has been visited before
+                if any(new_position == pos for pos in robot.position_history):
+                    robot.current_gene_index += 1
+                    continue
+                    
+                robot.position = new_position
                 robot.position_history.append(robot.position.copy())
                 robot.steps_taken += 1
                 
@@ -152,7 +159,13 @@ class GeneticNavigator:
             if not self.is_valid_move(current_pos, action):
                 continue
                 
-            current_pos = self.apply_move(current_pos, action)
+            new_pos = self.apply_move(current_pos, action)
+            
+            # Skip if position has been visited before
+            if any(new_pos == pos for pos in robot.position_history):
+                continue
+                
+            current_pos = new_pos
             robot.position_history.append(current_pos.copy())
             steps += 1
             

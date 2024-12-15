@@ -6,6 +6,7 @@ import json
 # from rssi_navigation import RSSINavigator
 from genetic_navigation import GeneticNavigator, Robot
 from create_llm_dataset import create_training_dataset
+from create_variation_datasets import create_datasets_for_variations
 # import time
 import random
 
@@ -202,6 +203,13 @@ with open(filename, 'w') as f:
     for example in all_training_data:
         f.write(json.dumps(example) + '\n')
 print(f"\nAll spawn points processed! Dataset has been created: {filename}")
+
+# Get user input for generations and spawn points
+target_generations = get_target_generation()
+num_spawn_points = get_spawn_points_count()
+
+# Create variation datasets with user-provided values
+create_datasets_for_variations(num_spawn_points=num_spawn_points, generations=target_generations)
 
 if view_best:
     # Initialize a new genetic navigator for visualization
